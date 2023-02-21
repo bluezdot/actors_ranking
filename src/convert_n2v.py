@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+import json
 
 from sklearn.decomposition import PCA
 from node2vec import Node2Vec as n2v
@@ -100,7 +101,10 @@ BATCH_WORDS = 4 # Node2Vec batch words
 
 g_emb = n2v(
   G,
-  dimensions=16
+  dimensions = 16,
+  walk_length = 40, 
+  num_walks = 5,
+  workers = 2
 )
 
 mdl = g_emb.fit(
@@ -110,45 +114,14 @@ mdl = g_emb.fit(
     batch_words=BATCH_WORDS
 )
 
-input_node = '1'
-for s in mdl.wv.most_similar(input_node, topn = 10):
-    print(s)
-
-emb_df = (
-    pd.DataFrame(
-        [mdl.wv.get_vector(str(n)) for n in G.nodes()],
-        index = G.nodes
-    )
-)
-
-print(emb_df.head(5))
-
-# pca = PCA(n_components = 2, random_state = 7)
-# pca_mdl = pca.fit_transform(emb_df)
-
-# emb_df_PCA = (
-#     pd.DataFrame(
-#         pca_mdl,
-#         columns=['x','y'],
-#         index = emb_df.index
-#     )
-# )
-# plt.clf()
-# fig = plt.figure(figsize=(6,4))
-# plt.scatter(
-#     x = emb_df_PCA['x'],
-#     y = emb_df_PCA['y'],
-#     s = 0.4,
-#     color = 'maroon',
-#     alpha = 0.5
-# )
-# plt.xlabel('PCA-1')
-# plt.ylabel('PCA-2')
-# plt.title('PCA Visualization')
-# plt.plot()
-
-# print(G)
-
-# # visualize degree distribution
-# nx.draw(G, with_labels=1)
-# plt.show()
+dict1 = {}
+for n in G.nodes():
+    vector = mdl.wv.get_vector(str(n))
+    dict[str(n)] = vector
+  
+# the json file where the output must be stored
+out_file = open("/data/n2v_3.json", "w")
+  
+json.dump(dict1, out_file, indent = 6)
+  
+out_file.close()
